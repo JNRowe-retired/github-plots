@@ -19,7 +19,7 @@ Quick start::
     api_token = deadbeefcafebabe...
     requests_per_second = 1
     $ pip install github-plots
-    $ github-plots issues joeuser/myrepo
+    $ github-plots open-issues joeuser/myrepo
 
 
 License

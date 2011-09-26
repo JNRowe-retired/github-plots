@@ -1,6 +1,7 @@
 import logging
 import os
 import argparse
+from collections import defaultdict
 from datetime import datetime, date, time, timedelta
 from operator import itemgetter
 from ConfigParser import ConfigParser
@@ -35,6 +36,14 @@ class IssueTimeline(object):
         changes.sort(key=itemgetter(0))
         self.changes = changes
 
+    def range(self):
+        if not self.changes:
+            self.load()
+        start_date = self.changes[0][0].date()
+        end_date = self.changes[-1][0].date()
+        num_days = int((end_date - start_date).total_seconds() / 86400)
+        return (start_date + timedelta(days=ii) for ii in xrange(num_days + 1))
+
     def issues_on(self, d):
         if not self.changes:
             self.load()
@@ -47,20 +56,26 @@ class IssueTimeline(object):
                 break
         return num
 
-    def issues_by_date(self):
+    def open_issues_by_date(self):
+        data = []
+        for day in self.range():
+            data.append((day.strftime('%m/%d/%Y'), self.issues_on(day)))
+        tomorrow = self.changes[-1][0].date() + timedelta(days=1)
+        data.append(("NOW", self.issues_on(tomorrow)))
+        return data
+
+    def handled_issues_by_date(self):
         if not self.changes:
             self.load()
-        start_date = self.changes[0][0].date()
-        end_date = self.changes[-1][0].date()
-        num_days = int((end_date - start_date).total_seconds() / 86400)
-
+        handled_by_date = defaultdict(int)
+        for change_date, change_diff in self.changes:
+            day = change_date.date()
+            if change_diff < 0:
+                handled_by_date[day] += 1
+        
         data = []
-        for ii in range(num_days + 1):
-            this = start_date + timedelta(days=ii)
-            data.append((this.strftime('%m/%d/%Y'), self.issues_on(this)))
-
-        tomorrow = end_date + timedelta(days=1)
-        data.append(("NOW", self.issues_on(tomorrow)))
+        for day in self.range():
+            data.append((day.strftime('%m/%d/%Y'), handled_by_date[day]))
         return data
 
 
@@ -73,7 +88,7 @@ def horizontal_bar(data, plot_width=80, bar_char='#', values=True):
         bar_width = value * scale
         bars = bar_char * bar_width
         s = "%s %s" % (label, bars)
-        if values:
+        if values and value > 0:
             s += " %s" % value
         print s
 
@@ -82,9 +97,11 @@ def main():
     p = argparse.ArgumentParser(description='plots from github.')
     p.add_argument('-v', '--verbose', dest='verbose', action='store_true',
                    help='print detailed output')
+    p.add_argument('--out', metavar='filename', dest='out_file', type=str,
+                   help='file to save output to')
     p.add_argument('mode', type=str,
                    help='plot to generate',
-                   choices=('issues',))
+                   choices=('open-issues', 'handled-issues'))
     p.add_argument('repos', metavar='repos', type=str, nargs='+',
                    help='repos to plot data for')
     args = p.parse_args()
@@ -92,10 +109,14 @@ def main():
         print "Running %s for %s" % (args.mode, ', '.join(args.repos))
 
     github = github_client()
-    if args.mode == 'issues':
-        for repo in args.repos:
-            print "Issue timeline for %s" % repo
-            data = IssueTimeline(github, repo).issues_by_date()
+    for repo in args.repos:
+        if args.mode == 'open-issues':
+            print "Open issue timeline for %s" % repo
+            data = IssueTimeline(github, repo).open_issues_by_date()
+            horizontal_bar(data)
+        elif args.mode == 'handled-issues':
+            print "Handled issue timeline for %s" % repo
+            data = IssueTimeline(github, repo).handled_issues_by_date()
             horizontal_bar(data)
 
 
