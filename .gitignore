@@ -16,3 +16,6 @@ github_plots.egg-info/
 
 # Test coverage data.
 cover/
+
+# PyPi Dist
+dist/
