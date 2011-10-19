@@ -4,19 +4,17 @@ import argparse
 from collections import defaultdict
 from datetime import datetime, date, time, timedelta
 from operator import itemgetter
-from ConfigParser import ConfigParser
+from configobj import ConfigObj
 from github2.client import Github
 
 logging.basicConfig(level=logging.ERROR)
 
 
 def github_client():
-    config = ConfigParser()
-    config.read(os.path.join(os.getenv('HOME'), '.github'))
-    per_sec = int(config.get('github', 'requests_per_second', 1))
-    return Github(username=config.get('github', 'username'),
-                  api_token=config.get('github', 'api_token'),
-                  requests_per_second=per_sec)
+    config = ConfigObj(os.path.join(os.getenv('HOME'), '.gitconfig'))
+    return Github(username=config['github']['user'],
+                  api_token=config['github']['token'],
+                  requests_per_second=1)
 
 
 class IssueTimeline(object):
