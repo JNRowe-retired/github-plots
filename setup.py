@@ -4,7 +4,7 @@ from setuptools import setup
 setup(name="github-plots",
       version='0.1',
       description="Alternative plots from GitHub stats.",
-      long_description='',
+      long_description=open('README.rst').read(),
       classifiers=[
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 2.7',
