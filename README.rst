@@ -11,16 +11,14 @@ Currently supported modes:
 ``issues`` - builds an ascii plot of the number of issues for your repo over time.
 
 
-Quick start::
+Quick start:
 
-    $ cat > ~/.github
-    [github]
-    username = joeuser
-    api_token = deadbeefcafebabe...
-    requests_per_second = 1
-    $ pip install github-plots
-    $ github-plots open-issues joeuser/myrepo
+1. Set up your GitHub username and API token, as described in the `wonderful
+   help documents`_
+2. Install github-plots with ``pip install github-plots``
+3. Generate some plots with ``github-plots open-issues joeuser/myrepo``
 
+.. _wonderful help documents: http://help.github.com/set-your-user-name-email-and-github-token/
 
 License
 =======
