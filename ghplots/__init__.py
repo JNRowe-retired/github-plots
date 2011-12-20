@@ -10,11 +10,12 @@ from github2.client import Github
 logging.basicConfig(level=logging.ERROR)
 
 
-def github_client():
+def github_client(cache):
     config = ConfigObj(os.path.join(os.getenv('HOME'), '.gitconfig'))
     return Github(username=config['github']['user'],
                   api_token=config['github']['token'],
-                  requests_per_second=1)
+                  requests_per_second=1,
+                  cache=os.path.expanduser(cache) if cache else None)
 
 
 class IssueTimeline(object):
@@ -95,6 +96,8 @@ def main():
     p = argparse.ArgumentParser(description='plots from github.')
     p.add_argument('-v', '--verbose', dest='verbose', action='store_true',
                    help='print detailed output')
+    p.add_argument('-c', '--cache', default=None, metavar='directory',
+                   help='location for network cache')
     p.add_argument('--out', metavar='filename', dest='out_file', type=str,
                    help='file to save output to')
     p.add_argument('mode', type=str,
@@ -106,7 +109,7 @@ def main():
     if args.verbose:
         print "Running %s for %s" % (args.mode, ', '.join(args.repos))
 
-    github = github_client()
+    github = github_client(args.cache)
     for repo in args.repos:
         if args.mode == 'open-issues':
             print "Open issue timeline for %s" % repo
