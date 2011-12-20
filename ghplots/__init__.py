@@ -2,7 +2,7 @@ import logging
 import os
 import argparse
 from collections import defaultdict
-from datetime import datetime, date, time, timedelta
+from datetime import datetime, time, timedelta
 from operator import itemgetter
 from configobj import ConfigObj
 from github2.client import Github
