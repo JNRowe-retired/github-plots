@@ -20,9 +20,10 @@ def github_client(cache):
 
 class IssueTimeline(object):
 
-    def __init__(self, github, repo_name):
+    def __init__(self, github, repo_name, date_format):
         self.github = github
         self.repo_name = repo_name
+        self.date_format = date_format
         self.changes = []
 
     def load(self):
@@ -58,7 +59,7 @@ class IssueTimeline(object):
     def open_issues_by_date(self):
         data = []
         for day in self.range():
-            data.append((day.strftime('%m/%d/%Y'), self.issues_on(day)))
+            data.append((day.strftime(self.date_format), self.issues_on(day)))
         tomorrow = self.changes[-1][0].date() + timedelta(days=1)
         data.append(("NOW", self.issues_on(tomorrow)))
         return data
@@ -74,7 +75,7 @@ class IssueTimeline(object):
         
         data = []
         for day in self.range():
-            data.append((day.strftime('%m/%d/%Y'), handled_by_date[day]))
+            data.append((day.strftime(self.date_format), handled_by_date[day]))
         return data
 
 
@@ -100,6 +101,8 @@ def main():
                    help='location for network cache')
     p.add_argument('--out', metavar='filename', dest='out_file', type=str,
                    help='file to save output to')
+    p.add_argument('--date-format', default='%m/%d/%Y', metavar='format',
+                   help='custom date format for output')
     p.add_argument('mode', type=str,
                    help='plot to generate',
                    choices=('open-issues', 'handled-issues'))
@@ -111,13 +114,14 @@ def main():
 
     github = github_client(args.cache)
     for repo in args.repos:
+        timeline = IssueTimeline(github, repo, args.date_format)
         if args.mode == 'open-issues':
             print "Open issue timeline for %s" % repo
-            data = IssueTimeline(github, repo).open_issues_by_date()
+            data = timeline.open_issues_by_date()
             horizontal_bar(data)
         elif args.mode == 'handled-issues':
             print "Handled issue timeline for %s" % repo
-            data = IssueTimeline(github, repo).handled_issues_by_date()
+            data = timeline.handled_issues_by_date()
             horizontal_bar(data)
 
 
